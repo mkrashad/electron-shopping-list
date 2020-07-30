@@ -1,9 +1,11 @@
 const electron = require('electron');
 const url = require('url')
 const path = require('path');
-const { create } = require('domain');
 
-const { app, BrowserWindow, Menu } = electron;
+const { app, BrowserWindow, Menu, ipcMain } = electron;
+
+// SET ENV
+process.env.NODE_ENV = 'production';
 
 let mainWindow;
 let addWindow
@@ -11,7 +13,11 @@ let addWindow
 // Listen for app to be ready
 app.on('ready', function () {
   // Create new window 
-  mainWindow = new BrowserWindow({})
+  mainWindow = new BrowserWindow({
+    webPreferences: {
+      nodeIntegration: true
+    }
+  })
   // Load html into window
   mainWindow.loadURL(url.format({
     pathname: path.join(__dirname, 'mainWindow.html'),
@@ -23,7 +29,6 @@ app.on('ready', function () {
   mainWindow.on('closed', function () {
     app.quit();
   })
-
 
 
   // Build menu from the template
@@ -38,7 +43,10 @@ function createAddWindow() {
   addWindow = new BrowserWindow({
     width: 300,
     height: 200,
-    title: 'Add Shopping List Item'
+    title: 'Add Shopping List Item',
+    webPreferences: {
+      nodeIntegration: true
+    }
   })
   // Load html into window
   addWindow.loadURL(url.format({
@@ -52,6 +60,12 @@ function createAddWindow() {
   })
 }
 
+// Catch item:add
+ipcMain.on('item:add', function (e, item) {
+  mainWindow.webContents.send('item:add', item);
+  addWindow.close();
+});
+
 // Create menu template 
 const mainMenuTemplate = [
   {
@@ -64,7 +78,10 @@ const mainMenuTemplate = [
         }
       },
       {
-        label: 'Clear Item'
+        label: 'Clear Item',
+        click() {
+          mainWindow.webContents.send('item:clear');
+        }
       },
       {
         label: 'Quit',
@@ -83,7 +100,7 @@ if (process.platform == 'darwin') {
 }
 
 // Add developer tools if not in production
-if (process.env.NODE_ENV != 'Production') {
+if (process.env.NODE_ENV != 'production') {
   mainMenuTemplate.push({
     label: 'Developer Tools',
     submenu: [
