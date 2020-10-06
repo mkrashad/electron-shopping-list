@@ -12,7 +12,7 @@
   "author": "Rashad Mahmudov",
   "license": "MIT",
   "dependencies": {
-    "electron": "^9.1.2"
+    "electron": "^9.3.1"
   },
   "devDependencies": {
     "electron-packager": "^15.0.0"
